@@ -2,7 +2,7 @@ import os
 import glob
 import time
 import argparse
-
+global args
 model_names = ['msdnet']
 
 arg_parser = argparse.ArgumentParser(
@@ -28,10 +28,10 @@ exp_group.add_argument('--gpu', default=None, type=str, help='GPU available.')
 
 # dataset related
 data_group = arg_parser.add_argument_group('data', 'dataset setting')
-data_group.add_argument('--data', metavar='D', default='cifar10',
+data_group.add_argument('--data', metavar='D', default='cifar100',
                         choices=['cifar10', 'cifar100', 'ImageNet'],
                         help='data to work on')
-data_group.add_argument('--data-root', metavar='DIR', default='data',
+data_group.add_argument('--data-root', metavar='DIR', default='/home/liuliang/dataset_python',
                         help='path to dataset (default: data)')
 data_group.add_argument('--use-valid', action='store_true',
                         help='use validation set or not')
@@ -41,7 +41,7 @@ data_group.add_argument('-j', '--workers', default=4, type=int, metavar='N',
 # model arch related
 arch_group = arg_parser.add_argument_group('arch',
                                            'model architecture setting')
-arch_group.add_argument('--arch', '-a', metavar='ARCH', default='resnet',
+arch_group.add_argument('--arch', '-a', metavar='ARCH', default='msdnet',
                         type=str, choices=model_names,
                         help='model architecture: ' +
                         ' | '.join(model_names) +
@@ -51,7 +51,7 @@ arch_group.add_argument('--reduction', default=0.5, type=float,
                         ' (1 means dot\'t use compression) (default: 0.5)')
 
 # msdnet config
-arch_group.add_argument('--nBlocks', type=int, default=1)
+arch_group.add_argument('--nBlocks', type=int, default=5)
 arch_group.add_argument('--nChannels', type=int, default=32)
 arch_group.add_argument('--base', type=int,default=4)
 arch_group.add_argument('--stepmode', type=str, choices=['even', 'lin_grow'])
@@ -88,3 +88,5 @@ optim_group.add_argument('--momentum', default=0.9, type=float, metavar='M',
                          help='momentum (default=0.9)')
 optim_group.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                          metavar='W', help='weight decay (default: 1e-4)')
+
+

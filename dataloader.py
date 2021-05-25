@@ -22,6 +22,7 @@ def get_dataloaders(args):
                                     transforms.ToTensor(),
                                     normalize
                                    ]))
+                                   
     elif args.data == 'cifar100':
         normalize = transforms.Normalize(mean=[0.5071, 0.4867, 0.4408],
                                          std=[0.2675, 0.2565, 0.2761])
@@ -55,6 +56,7 @@ def get_dataloaders(args):
             transforms.ToTensor(),
             normalize
         ]))
+
     if args.use_valid:
         train_set_index = torch.randperm(len(train_set))
         if os.path.exists(os.path.join(args.save, 'index.pth')):

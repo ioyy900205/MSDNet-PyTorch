@@ -15,49 +15,16 @@ from args import arg_parser
 from adaptive_inference import dynamic_evaluate
 import models
 from op_counter import measure_model
-
-args = arg_parser.parse_args()
-
-if args.gpu:
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-
-args.grFactor = list(map(int, args.grFactor.split('-')))
-args.bnFactor = list(map(int, args.bnFactor.split('-')))
-args.nScales = len(args.grFactor)
-
-if args.use_valid:
-    args.splits = ['train', 'val', 'test']
-else:
-    args.splits = ['train', 'val']
-
-if args.data == 'cifar10':
-    args.num_classes = 10
-elif args.data == 'cifar100':
-    args.num_classes = 100
-else:
-    args.num_classes = 1000
-
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim
 
-torch.manual_seed(args.seed)
 
-def main():
 
-    global args
+def main(args):
     best_prec1, best_epoch = 0.0, 0
-
-    if not os.path.exists(args.save):
-        os.makedirs(args.save)
-
-    if args.data.startswith('cifar'):
-        IM_SIZE = 32
-    else:
-        IM_SIZE = 224
-
     model = getattr(models, args.arch)(args)
     n_flops, n_params = measure_model(model, IM_SIZE, IM_SIZE)    
     torch.save(n_flops, os.path.join(args.save, 'flops.pth'))
@@ -348,4 +315,40 @@ def adjust_learning_rate(optimizer, epoch, args, batch=None,
     return lr
 
 if __name__ == '__main__':
-    main()
+    args = arg_parser.parse_args()
+    if args.gpu:
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
+    args.grFactor = list(map(int, args.grFactor.split('-')))
+    args.bnFactor = list(map(int, args.bnFactor.split('-')))
+    args.nScales = len(args.grFactor)
+
+    if args.use_valid:
+        args.splits = ['train', 'val', 'test']
+    else:
+        args.splits = ['train', 'val']
+
+    if args.data == 'cifar10':
+        args.num_classes = 10
+    elif args.data == 'cifar100':
+        args.num_classes = 100
+    else:
+        args.num_classes = 1000
+
+    torch.manual_seed(args.seed)
+   
+    
+    # 准确率
+
+    
+
+    # 创建文件夹
+    if not os.path.exists(args.save):
+        os.makedirs(args.save)
+
+    if args.data.startswith('cifar'):
+        IM_SIZE = 32
+    else:
+        IM_SIZE = 224
+
+    main(args)
