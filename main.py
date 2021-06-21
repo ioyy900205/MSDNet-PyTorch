@@ -24,13 +24,15 @@ import torch.optim
 
 
 def main(args):
+    #######################################################################################
+    ##   注释：
+    ##   载入模型
+    #######################################################################################
     best_prec1, best_epoch = 0.0, 0
     model = getattr(models, args.arch)(args)
     n_flops, n_params = measure_model(model, IM_SIZE, IM_SIZE)    
     torch.save(n_flops, os.path.join(args.save, 'flops.pth'))
-    del(model)
-        
-        
+    del(model) 
     model = getattr(models, args.arch)(args)
 
     if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
@@ -39,12 +41,24 @@ def main(args):
     else:
         model = torch.nn.DataParallel(model).cuda()
 
+
+    #######################################################################################
+    ##   注释：
+    ##   载入criterion
+    #######################################################################################
     criterion = nn.CrossEntropyLoss().cuda()
 
+    #######################################################################################
+    ##   注释：
+    ##   载入optimizer
+    #######################################################################################
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
-
+    #######################################################################################
+    ##   注释：
+    ##   接 中断的训练
+    #######################################################################################
     if args.resume:
         checkpoint = load_checkpoint(args)
         if checkpoint is not None:
@@ -55,8 +69,17 @@ def main(args):
 
     cudnn.benchmark = True
 
+    #######################################################################################
+    ##   注释：
+    ##   导入数据集
+    #######################################################################################
     train_loader, val_loader, test_loader = get_dataloaders(args)
 
+
+    #######################################################################################
+    ##   注释：
+    ##   选择推理模式 imagenet--dynamic
+    #######################################################################################
     if args.evalmode is not None:
         state_dict = torch.load(args.evaluate_from)['state_dict']
         model.load_state_dict(state_dict)

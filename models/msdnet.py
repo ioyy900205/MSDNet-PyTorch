@@ -87,6 +87,7 @@ class ConvNormal(nn.Module):
 
         return torch.cat(res, dim=1)
 
+
 class MSDNFirstLayer(nn.Module):
     def __init__(self, nIn, nOut, args):
         super(MSDNFirstLayer, self).__init__()
@@ -114,8 +115,7 @@ class MSDNFirstLayer(nn.Module):
         for i in range(len(self.layers)):
             x = self.layers[i](x)
             res.append(x)
-
-        return res
+        return res #res为3个尺度的tensor，分别是[32,16,8]的feature map
 
 class MSDNLayer(nn.Module):
     def __init__(self, nIn, nOut, args, inScales=None, outScales=None):
@@ -144,6 +144,10 @@ class MSDNLayer(nn.Module):
                                           args.bottleneck,
                                           args.bnFactor[self.offset]))
 
+        #######################################################################################
+        ##   注释：
+        ##   插入 scale = 1 or 2 的 layer
+        #######################################################################################
         for i in range(self.offset + 1, self.nScales):
             nIn1 = nIn * args.grFactor[i - 1]
             nIn2 = nIn * args.grFactor[i]
@@ -199,6 +203,12 @@ class ClassifierModule(nn.Module):
         res = res.view(res.size(0), -1)
         return self.linear(res)
 
+
+#######################################################################################
+##   注释：
+##   MSDNet 网络结构主体
+#######################################################################################
+
 class MSDNet(nn.Module):
     def __init__(self, args):
         super(MSDNet, self).__init__()
@@ -218,6 +228,8 @@ class MSDNet(nn.Module):
         print(self.steps, n_layers_all)
 
         nIn = args.nChannels
+
+
         for i in range(self.nBlocks):
             print(' ********************** Block {} '
                   ' **********************'.format(i + 1))
@@ -225,6 +237,7 @@ class MSDNet(nn.Module):
                 self._build_block(nIn, args, self.steps[i],
                                   n_layers_all, n_layer_curr)
             self.blocks.append(m)
+
             n_layer_curr += self.steps[i]
 
             if args.data.startswith('cifar100'):
@@ -265,8 +278,17 @@ class MSDNet(nn.Module):
 
     def _build_block(self, nIn, args, step, n_layer_all, n_layer_curr):
 
+        #######################################################################################
+        ##   注释：
+        ##   layer.0 创建MSDNFirstLayer
+        #######################################################################################
         layers = [MSDNFirstLayer(3, nIn, args)] \
             if n_layer_curr == 0 else []
+        #######################################################################################
+        ##   注释：
+        ##   ini.0 减枝类型，设置初始化参数 inScales and outScales
+        ##   这个用来简化层数 更新inScale 和 outScale
+        #######################################################################################
         for i in range(step):
             n_layer_curr += 1
             inScales = args.nScales
@@ -281,10 +303,26 @@ class MSDNet(nn.Module):
             else:
                 raise ValueError
 
+        #######################################################################################
+        ##   注释：
+        ##   layer.1
+        #
+        #       创建MSDNlayer
+        #
+        #       nIn
+        #       args.growthRate
+        #       args
+        #       inScales
+        #       outScales
+        #######################################################################################
             layers.append(MSDNLayer(nIn, args.growthRate, args, inScales, outScales))
             print('|\t\tinScales {} outScales {} inChannels {} outChannels {}\t\t|'.format(inScales, outScales, nIn, args.growthRate))
 
             nIn += args.growthRate
+        #######################################################################################
+        ##   注释：
+        ##   layer.2 创建 Transition layer 或用于尺度统一
+        #######################################################################################
             if args.prune == 'max' and inScales > outScales and \
                     args.reduction > 0:
                 offset = args.nScales - outScales
@@ -306,6 +344,16 @@ class MSDNet(nn.Module):
             print("")
 
         return nn.Sequential(*layers), nIn
+
+
+
+    #######################################################################################
+    ##   注释：
+    ##   内部构件函数 
+    # _build_transition 
+    # _build_classifier_cifar
+    # _build_classifier_imagenet
+    #######################################################################################
 
     def _build_transition(self, nIn, nOut, outScales, offset, args):
         net = []
@@ -334,7 +382,7 @@ class MSDNet(nn.Module):
 
     def forward(self, x):
         res = []
-        for i in range(self.nBlocks):
+        for i in range(self.nBlocks):            
             x = self.blocks[i](x)
             res.append(self.classifier[i](x))
         return res

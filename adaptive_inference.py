@@ -10,12 +10,17 @@ import math
 
 def dynamic_evaluate(model, test_loader, val_loader, args):
     tester = Tester(model, args)
+
+    #######################################################################################
+    ##   注释：
+    ##   每个分类器对于每一个样本的一个预测结果置信度
+    #######################################################################################
     if os.path.exists(os.path.join(args.save, 'logits_single.pth')): 
         val_pred, val_target, test_pred, test_target = \
             torch.load(os.path.join(args.save, 'logits_single.pth')) 
     else: 
-        val_pred, val_target = tester.calc_logit(val_loader) 
-        test_pred, test_target = tester.calc_logit(test_loader) 
+        val_pred, val_target = tester.calc_logit(val_loader)    #val_pred size(5,50000,1000)    val_target size(50000)
+        test_pred, test_target = tester.calc_logit(test_loader) #test_pred size(5,50000,1000)   test_target size(50000)
         torch.save((val_pred, val_target, test_pred, test_target), 
                     os.path.join(args.save, 'logits_single.pth'))
 
@@ -75,6 +80,7 @@ class Tester(object):
         return ts_logits, ts_targets
 
     def dynamic_eval_find_threshold(self, logits, targets, p, flops):
+        #(val_pred, val_target, probs, flops)
         """
             logits: m * n * c
             m: Stages
@@ -83,7 +89,7 @@ class Tester(object):
         """
         n_stage, n_sample, c = logits.size()
 
-        max_preds, argmax_preds = logits.max(dim=2, keepdim=False)
+        max_preds, argmax_preds = logits.max(dim=2, keepdim=False) #[5,50000]
 
         _, sorted_idx = max_preds.sort(dim=1, descending=True)
 
@@ -123,7 +129,7 @@ class Tester(object):
 
         return acc * 100.0 / n_sample, expected_flops, T
 
-    def dynamic_eval_with_threshold(self, logits, targets, flops, T):
+    def dynamic_eval_with_threshold(self, logits, targets, flops, T): #(test_pred, test_target, flops, T)
         n_stage, n_sample, _ = logits.size()
         max_preds, argmax_preds = logits.max(dim=2, keepdim=False) # take the max logits as confidence
 
