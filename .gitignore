@@ -107,3 +107,6 @@ ENV/
 results/*
 
 .DS_Store
+*.tar
+*.tar
+*.pth
