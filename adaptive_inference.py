@@ -40,6 +40,7 @@ def dynamic_evaluate(model, test_loader, val_loader, args):
             fout.write('{}\t{}\n'.format(acc_test, exp_flops.item()))
 
 
+
 class Tester(object):
     def __init__(self, model, args=None):
         self.args = args

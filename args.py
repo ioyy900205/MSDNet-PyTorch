@@ -16,7 +16,7 @@ exp_group.add_argument('--save', default='save/default-{}'.format(time.time()),
                        '(default: save/debug)')
 exp_group.add_argument('--resume', action='store_true',
                        help='path to latest checkpoint (default: none)')
-exp_group.add_argument('--evalmode', default='anytime',
+exp_group.add_argument('--evalmode', default='dynamic',
                        choices=['anytime', 'dynamic'],
                        help='which mode to evaluate')
 exp_group.add_argument('--evaluate-from', default='/home/liuliang/MSDNet_pre/models/step=4/msdnet-step=4-block=5.pth.tar', type=str, metavar='PATH',
